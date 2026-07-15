@@ -1,0 +1,1366 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    
+    <!-- PWA Installation Metadata -->
+    <link rel="manifest" href="./manifest.json">
+    <meta name="theme-color" content="#1c5629">
+    
+    <meta name="apple-mobile-web-app-title" content="Assistant Commissioner's Supervisory Matrix">
+    <title>Assistant Commissioner's Supervisory Matrix (Qasimabad)</title>
+    
+    <!-- Google Fonts: Instrument Sans & Instrument Serif -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Instrument+Sans:ital,wght@0,400..700;1,400..700&family=Instrument+Serif:ital@0;1&display=swap" rel="stylesheet">
+
+    <!-- Leaflet CSS -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+
+    <!-- Cropper.js CSS -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.css" />
+    
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="style.css?v=3.9" />
+    
+    <!-- PWA Manifest -->
+    <link rel="manifest" href="manifest.json">
+</head>
+<body>
+    
+    <!-- ================= LOADING BARRIER ================= -->
+    <div id="app-loading-screen" style="position:fixed; top:0; left:0; width:100vw; height:100dvh; background:#ffffff; z-index:99999; display:flex; flex-direction:column; align-items:center; justify-content:center;">
+        <img src="sindh_logo.png" style="height:80px; margin-bottom:20px; animation: pulse 2s infinite;" onerror="this.onerror=null; this.src='https://upload.wikimedia.org/wikipedia/commons/thumb/d/d4/Government_of_Sindh_Logo.svg/1200px-Government_of_Sindh_Logo.svg.png'">
+        <p style="color:#1c5629; font-weight:600; font-family:'Instrument Sans', sans-serif;">Authenticating Session...</p>
+    </div>
+    
+    <!-- ================= AUTHENTICATION BARRIER ================= -->
+    <div id="auth-container" style="width:100vw; height:100dvh; display:none; flex-direction:column; align-items:center; background: linear-gradient(135deg, #1c5629 0%, #366A4F 100%); overflow-y:auto; padding:20px 20px 40px;">
+        <div class="glass-panel" style="width:100%; max-width:400px; margin-top:auto; background:rgba(255,255,255,0.98); box-shadow:0 25px 50px rgba(0,0,0,0.5);">
+            
+            <div style="text-align:center; margin-bottom:15px;">
+                <img src="sindh_logo.png" alt="Govt of Sindh" style="height:50px; margin-bottom:5px;" onerror="this.onerror=null; this.src='https://upload.wikimedia.org/wikipedia/commons/thumb/d/d4/Government_of_Sindh_Logo.svg/1200px-Government_of_Sindh_Logo.svg.png'">
+                <h1 style="color:#1c5629; font-size:1.3rem; margin-bottom:2px; border:none; padding:0;">Assistant Commissioner's Supervisory Matrix</h1>
+                <p style="font-size:0.75rem; color:#64748b; text-transform:uppercase; letter-spacing:1px;">Qasimabad Authorized Access</p>
+            </div>
+
+            <!-- LOGIN VIEW -->
+            <div id="auth-login-view">
+                <form id="login-form" onsubmit="return false;">
+                    <div class="form-group">
+                        <label>Unique Username (or Email):</label>
+                        <input type="text" id="login-identifier" class="form-control" placeholder="Enter username or email" autocomplete="username">
+                    </div>
+                    <div class="form-group">
+                        <label>Password:</label>
+                        <input type="password" id="login-password" class="form-control" placeholder="Enter password" autocomplete="current-password">
+                    </div>
+                    <button type="submit" id="login-btn" class="primary-btn" style="background: linear-gradient(135deg, #366A4F 0%, #1c5629 100%); margin-top:10px;">🔐 Secure Login</button>
+                </form>
+                
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;">
+                    <label style="margin:0;"><input type="checkbox" id="auth-remember" checked> Remember Me</label>
+                    <a href="#" id="link-forgot-password" style="color:#366A4F; font-size:0.85rem; text-decoration:none;">Forgot Password?</a>
+                </div>
+                
+                <div style="border-top:1px solid #e2e8f0; margin-top:15px; padding-top:10px; text-align:center;">
+                    <p style="font-size:0.8rem; color:#64748b; margin-bottom:5px;">First time setup on this device?</p>
+                    <button id="link-signup" class="raid-action-btn edit-btn" style="width:100%; padding:8px; font-weight:bold;">Create Officer Profile</button>
+                </div>
+            </div>
+
+            <!-- SIGNUP VIEW -->
+            <div id="auth-signup-view" style="display:none;">
+                <h2 style="font-size:1.1rem; border-bottom:2px solid #366A4F; padding-bottom:5px; margin-bottom:15px;">Create Profile</h2>
+                
+                <div class="form-group"><label>Full Name:</label><input type="text" id="signup-name" class="form-control"></div>
+                <div class="form-group"><label>Unique Username:</label><input type="text" id="signup-username" class="form-control" placeholder="e.g. sheraz123"></div>
+                <div class="form-group"><label>Official Email (For Recovery):</label><input type="email" id="signup-email" class="form-control" placeholder="name@domain.com"></div>
+                <div class="form-group"><label>Designation:</label><input type="text" id="signup-designation" class="form-control" placeholder="e.g. Mukhtiarkar"></div>
+                <div class="form-group"><label>Date of Joining Office:</label><input type="date" id="signup-doj" class="form-control"></div>
+                <div class="form-group"><label>Supervising Officer:</label><input type="text" id="signup-reporting" class="form-control"></div>
+                <div class="form-group"><label>Date of Birth:</label><input type="date" id="signup-dob" class="form-control"></div>
+                
+                <div class="form-group" style="margin-top:20px;">
+                    <label style="color:#b91c1c;">Secure Password (Min 6 characters):</label>
+                    <input type="password" id="signup-password" class="form-control" placeholder="Create password">
+                </div>
+                
+                <button id="register-btn" class="primary-btn" style="background: linear-gradient(135deg, #366A4F 0%, #1c5629 100%); margin-top:10px;">💾 Register Profile</button>
+                <button id="link-back-login" class="primary-btn btn-cancel" style="margin-top:5px;">Cancel</button>
+            </div>
+            
+            <!-- PENDING APPROVAL VIEW -->
+            <div id="auth-pending-view" style="display:none; text-align:center; padding:20px 0;">
+                <h2 style="color:#b91c1c; margin-bottom:10px;">Account Pending Approval</h2>
+                <p style="color:#475569; font-size:0.9rem; margin-bottom:20px;">Your account has been created securely, but it must be approved by the District Admin before you can access the mapping and enforcement databases.</p>
+                <p style="color:#64748b; font-size:0.8rem; margin-bottom:20px;">Please contact your supervisor to expedite approval.</p>
+                <button id="pending-logout-btn" class="primary-btn btn-cancel">Logout</button>
+            </div>
+
+        </div>
+
+        <!-- Credits below Login Card — inside auth-container so it disappears after login -->
+        <div id="login-credits" style="width:100%; max-width:400px; margin-top:16px; margin-bottom:auto; text-align:center; padding:16px 20px; background:rgba(255,255,255,0.95); border:1px solid #e2e8f0; border-radius:12px; box-shadow:0 10px 25px rgba(0,0,0,0.2);">
+            <p style="margin:0 0 10px; font-size:0.7rem; letter-spacing:1px; text-transform:uppercase; color:#64748b; font-family:'Instrument Sans',sans-serif; font-weight:600;">Built with dedication by</p>
+            <div style="display:flex; flex-direction:column; gap:8px;">
+                <div>
+                    <p style="margin:0; font-size:0.9rem; color:#1c5629; font-weight:700; font-family:'Instrument Serif',serif;">Dr. Saira Khan, PMS</p>
+                    <p style="margin:0; font-size:0.75rem; color:#475569; font-family:'Instrument Sans',sans-serif;">AC, Liaquatabad, Karachi</p>
+                </div>
+                <div style="border-top:1px solid #e2e8f0; padding-top:8px;">
+                    <p style="margin:0; font-size:0.9rem; color:#1c5629; font-weight:700; font-family:'Instrument Serif',serif;">Mr. Hataf Siyal, PMS</p>
+                    <p style="margin:0; font-size:0.75rem; color:#475569; font-family:'Instrument Sans',sans-serif;">AC, Qasimabad, Hyderabad</p>
+                </div>
+                <div style="border-top:1px solid #e2e8f0; padding-top:8px;">
+                    <p style="margin:0; font-size:0.9rem; color:#1c5629; font-weight:700; font-family:'Instrument Serif',serif;">Mr. Sheraz Ahmed</p>
+                    <p style="margin:0; font-size:0.75rem; color:#475569; font-family:'Instrument Sans',sans-serif;">Mukhtiarkar U.T, Qasimabad, Hyderabad</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ================= SECURE APP CONTAINER ================= -->
+    <!-- SANDBOX WARNING BANNER -->
+    <div id="sandbox-banner" style="display:none; position:fixed; top:0; left:0; width:100%; background:#eab308; color:#854d0e; text-align:center; padding:5px; font-size:0.85rem; font-weight:bold; z-index:10000;">⚠️ SANDBOX TRAINING MODE - Activity is isolated from production.</div>
+
+    <!-- ================= TRAINING MODE OVERLAY ================= -->
+    <div id="training-overlay" style="display:none; position:fixed; top:0; left:0; width:100vw; height:100vh; background:rgba(0,0,0,0.85); z-index:9000; align-items:center; justify-content:center; flex-direction:column;">
+        <div style="background:#1c5629; border:2px solid #f59e0b; padding:25px; border-radius:12px; max-width:400px; width:90%; color:white; text-align:center; box-shadow:0 10px 30px rgba(0,0,0,0.8);">
+            <h2 style="color:#f59e0b; margin-bottom:10px;">Mandatory Training</h2>
+            <p id="training-step-text" style="font-size:1rem; margin-bottom:20px; color:#cbd5e1;">Welcome! To complete your training, you must locate yourself on the map.</p>
+            <button id="training-skip-btn" class="nav-btn" style="width:100%; margin-bottom:10px; background:#334155; display:block;">Skip Training</button>
+        </div>
+    </div>
+
+    <!-- ================= UI CONTAINER ================= -->
+    <div id="app-container" style="display:none; width:100%; height:100%;">
+        <!-- GLOBAL NAVIGATION BAR -->
+        <div id="global-nav" style="position:fixed; top:0; left:0; width:100%; height:60px; background: linear-gradient(135deg, #1c5629 0%, #366A4F 100%); z-index:9100; display:flex; justify-content:space-between; align-items:center; padding:0 15px; box-shadow:0 2px 10px rgba(0,0,0,0.3);">
+            <div style="display:flex; align-items:center;">
+                <img src="sindh_logo.png" alt="Logo" style="height:40px; margin-right:10px; filter: brightness(0) invert(1);" onerror="this.onerror=null; this.src='https://upload.wikimedia.org/wikipedia/commons/thumb/d/d4/Government_of_Sindh_Logo.svg/120px-Government_of_Sindh_Logo.svg.png'">
+                <div style="display:flex; flex-direction:column; justify-content:center;">
+                    <h2 style="color:white; font-size:1.1rem; margin:0; line-height:1.2;">AC's Supervisory Matrix</h2>
+                </div>
+                <!-- Sync Status Container -->
+                <div id="sync-status-container" style="display:none; align-items:center; gap:8px; margin-left:10px; background:rgba(0,0,0,0.25); padding:4px 8px; border-radius:20px;">
+                    <span id="sync-status-icon" style="font-size:0.75rem; font-weight:bold; color:#4ade80; display:flex; align-items:center; gap:4px; white-space:nowrap;">🟢 Live</span>
+                    <button id="force-sync-btn" style="background:rgba(255,255,255,0.1); border:1px solid rgba(255,255,255,0.3); color:white; font-size:0.75rem; border-radius:12px; padding:2px 6px; cursor:pointer; display:flex; align-items:center; gap:4px; transition:all 0.2s; white-space:nowrap;">
+                        <span id="sync-btn-icon" style="display:inline-block;">🔁</span> Sync
+                    </button>
+                </div>
+            </div>
+            <div style="display:flex; gap:10px; align-items:center;">
+                <button id="nav-home-btn" class="nav-btn" style="color:#a7f3d0; font-weight:bold;">🏠 Domains</button>
+                <button id="nav-global-admin-btn" class="nav-btn" style="display:none; position:relative; color:#f59e0b;">🛡️ Control Panel </button>
+                <button id="nav-instructions-btn" class="nav-btn" style="display:none; position:relative; color:#93c5fd;">📖 Manual <span id="notif-instructions-badge" style="display:none; position:absolute; top:-5px; right:-10px; background:#ef4444; color:white; border-radius:50%; width:20px; height:20px; font-size:0.75rem; align-items:center; justify-content:center;">!</span></button>
+                <button id="nav-profile-btn" class="nav-btn" style="color:#e2e8f0; background:rgba(255,255,255,0.1);">👤 Profile</button>
+                <button id="nav-about-btn" title="About / Credits" style="background:rgba(255,255,255,0.12); border:1px solid rgba(255,255,255,0.25); color:#a7f3d0; width:32px; height:32px; border-radius:50%; font-size:0.95rem; cursor:pointer; display:flex; align-items:center; justify-content:center; flex-shrink:0; transition:background 0.2s;" onmouseover="this.style.background='rgba(255,255,255,0.22)'" onmouseout="this.style.background='rgba(255,255,255,0.12)'">ℹ️</button>
+            </div>
+        </div>
+
+        <!-- DOMAIN NAVIGATION BAR (Secondary) -->
+        <div id="domain-nav" style="position:fixed; top:60px; left:0; width:100%; height:50px; background: #2b563d; z-index:9000; display:none; align-items:center; padding:0 15px; box-shadow:0 2px 5px rgba(0,0,0,0.2); border-bottom:1px solid #1c5629; gap:10px; overflow-x:auto;">
+            <span id="active-domain-label" style="color:#a7f3d0; font-weight:bold; margin-right:10px; white-space:nowrap; border-right:1px solid #1c5629; padding-right:10px;"></span>
+            <button id="nav-map-btn" class="nav-btn" style="color:#fff;">🗺️ Map</button>
+            <button id="nav-dashboard-btn" class="nav-btn" style="color:#fff;">📊 Dashboard</button>
+            <div style="position:relative; display:flex; align-items:center;">
+                <button id="nav-notifications-btn" class="nav-btn" style="color:#fff;">🔔 Activity</button>
+                <div id="notif-badge" style="display:none; position:absolute; top:2px; right:2px; background:#ef4444; color:white; font-size:0.65rem; font-weight:bold; width:18px; height:18px; border-radius:50%; align-items:center; justify-content:center; box-shadow:0 2px 4px rgba(0,0,0,0.3);"></div>
+            </div>
+            <button id="nav-instructions-btn" class="nav-btn" style="display:none; color:#fff;">💬 Instructions</button>
+            <button id="nav-domain-admin-btn" class="nav-btn" style="display:none; color:#f59e0b;">🛡️ Domain Audit</button>
+        </div>
+
+    <!-- ================= HOME VIEW (DOMAIN SELECTION) ================= -->
+    <div id="home-view" style="display:flex; flex-direction:column; padding-top:80px; padding-left:20px; padding-right:20px; padding-bottom:40px; min-height:100dvh; overflow-y:auto; overflow-x:hidden; background: linear-gradient(135deg, #1c5629 0%, #366A4F 100%); color:#f8fafc; align-items:center;">
+        <div style="max-width:800px; width:100%;">
+            <div style="text-align:center; margin-bottom:30px;">
+                <h1 style="color:#a7f3d0; margin-bottom:10px;">Select Supervisory Domain</h1>
+                <p style="color:#94a3b8; font-size:1rem;">Choose a sector to monitor metrics or log new activities.</p>
+            </div>
+            
+            <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(250px, 1fr)); gap:20px;">
+                
+                <!-- 1. Wholesale Price Checking -->
+                <div class="domain-card" data-domain="wholesale_price" style="background:rgba(255,255,255,0.05); border:1px solid #334155; border-radius:12px; padding:20px; text-align:center; cursor:pointer; transition:all 0.3s ease;">
+                    <div style="font-size:2.5rem; margin-bottom:10px;">🏭</div>
+                    <h2 style="color:#6ee7b7; font-size:1.2rem; margin-bottom:10px;">Wholesale Checking</h2>
+                    <p style="color:#cbd5e1; font-size:0.85rem;">Inspect Atta Chakis & Flour Mills for rate adherence.</p>
+                </div>
+
+                <!-- 2. Essential Commodities Retail -->
+                <div class="domain-card" data-domain="retail_price" style="background:rgba(255,255,255,0.05); border:1px solid #334155; border-radius:12px; padding:20px; text-align:center; cursor:pointer; transition:all 0.3s ease;">
+                    <div style="font-size:2.5rem; margin-bottom:10px;">🏪</div>
+                    <h2 style="color:#6ee7b7; font-size:1.2rem; margin-bottom:10px;">Essential Retail</h2>
+                    <p style="color:#cbd5e1; font-size:0.85rem;">Check retail groceries, pulses, and spices.</p>
+                </div>
+
+                <!-- 3. Fruits & Vegetables -->
+                <div class="domain-card" data-domain="fv_price" style="background:rgba(255,255,255,0.05); border:1px solid #334155; border-radius:12px; padding:20px; text-align:center; cursor:pointer; transition:all 0.3s ease;">
+                    <div style="font-size:2.5rem; margin-bottom:10px;">🍎</div>
+                    <h2 style="color:#6ee7b7; font-size:1.2rem; margin-bottom:10px;">Fruits & Vegetables</h2>
+                    <p style="color:#cbd5e1; font-size:0.85rem;">Audit produce vendors for auction rate compliance.</p>
+                </div>
+
+                <!-- 4. LPG Gas Price Control -->
+                <div class="domain-card" data-domain="lpg_price" style="background:rgba(255,255,255,0.05); border:1px solid #334155; border-radius:12px; padding:20px; text-align:center; cursor:pointer; transition:all 0.3s ease;">
+                    <div style="font-size:2.5rem; margin-bottom:10px;">🔥</div>
+                    <h2 style="color:#fbbf24; font-size:1.2rem; margin-bottom:10px;">LPG Gas Price</h2>
+                    <p style="color:#cbd5e1; font-size:0.85rem;">Monitor retail LPG cylinder rate compliance.</p>
+                </div>
+
+                <!-- 5. Petrol Station Check -->
+                <div class="domain-card" data-domain="petrol_check" style="background:rgba(255,255,255,0.05); border:1px solid #334155; border-radius:12px; padding:20px; text-align:center; cursor:pointer; transition:all 0.3s ease;">
+                    <div style="font-size:2.5rem; margin-bottom:10px;">⛽</div>
+                    <h2 style="color:#fbbf24; font-size:1.2rem; margin-bottom:10px;">Petrol Quantity</h2>
+                    <p style="color:#cbd5e1; font-size:0.85rem;">Verify pump prices and volumetric short measures.</p>
+                </div>
+                
+                <!-- 6. Anti-Hoarding -->
+                <div class="domain-card" data-domain="anti_hoarding" style="background:rgba(255,255,255,0.05); border:1px solid #334155; border-radius:12px; padding:20px; text-align:center; cursor:pointer; transition:all 0.3s ease;">
+                    <div style="font-size:2.5rem; margin-bottom:10px;">🌾</div>
+                    <h2 style="color:#fcd34d; font-size:1.2rem; margin-bottom:10px;">Anti-Hoarding</h2>
+                    <p style="color:#cbd5e1; font-size:0.85rem;">Audit godowns and track seized agricultural stocks.</p>
+                </div>
+                
+                <!-- 7. Anti-Encroachment -->
+                <div class="domain-card" data-domain="anti_encroachment" style="background:rgba(255,255,255,0.05); border:1px solid #334155; border-radius:12px; padding:20px; text-align:center; cursor:pointer; transition:all 0.3s ease;">
+                    <div style="font-size:2.5rem; margin-bottom:10px;">🚜</div>
+                    <h2 style="color:#f87171; font-size:1.2rem; margin-bottom:10px;">Anti-Encroachment</h2>
+                    <p style="color:#cbd5e1; font-size:0.85rem;">Log structural demolitions and state land value.</p>
+                </div>
+                
+                <!-- 8. Tobacco Enforcement -->
+                <div class="domain-card" data-domain="tobacco_enforcement" style="background:rgba(255,255,255,0.05); border:1px solid #334155; border-radius:12px; padding:20px; text-align:center; cursor:pointer; transition:all 0.3s ease;">
+                    <div style="font-size:2.5rem; margin-bottom:10px;">🚬</div>
+                    <h2 style="color:#c084fc; font-size:1.2rem; margin-bottom:10px;">Tobacco Enforcement</h2>
+                    <p style="color:#cbd5e1; font-size:0.85rem;">Track illicit cigarette sales and FBR raids.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ================= MAP VIEW ================= -->
+        <div id="map-view" style="display:none;">
+        <div id="ui-container" style="top:130px;">
+            <div class="glass-panel" id="map-controls-panel" style="position:relative;">
+                <button id="minimize-panel-btn" style="position:absolute; top:10px; right:10px; background:transparent; border:none; font-size:1.2rem; cursor:pointer; color:#64748b; z-index:10; font-family: 'Instrument Sans', sans-serif !important;">➖</button>
+                <div id="map-panel-content">
+                    <h1 id="map-panel-title" style="padding-right: 20px;">Domain Action Map</h1>
+                    <p id="map-panel-desc">Your transparent digital map is permanently locked into place.</p>
+                    <p>Use "Locate Me" to see your live GPS location on top of the physical boundaries.</p>
+                    <br>
+                    <button id="add-activity-btn" class="primary-btn" style="width: 100%; margin-bottom: 10px;">➕ Add Activity</button>
+                    <button id="locate-btn" class="primary-btn" style="background: #0ea5e9; width: 100%; margin-bottom: 10px;">📍 Locate Me</button>
+                    <div class="control-group" id="map-opacity-control" style="margin-top: 15px;">
+                        <label for="map-opacity" style="display:block; font-size:0.8rem; font-weight:bold; color:#1c5629; margin-bottom:5px;">Map Opacity (<span id="opacity-val">50%</span>)</label>
+                        <input type="range" id="map-opacity" min="0" max="1" step="0.1" value="0.5" style="width:100%;">
+                    </div>
+                </div>
+                <div id="map-panel-footer" style="margin-top:20px; font-size:0.75rem; color:#64748b; text-align:center;">
+                    System Status: <span id="status-msg">Online</span>
+                </div>
+            </div>
+        </div>
+        <div id="map" style="top:60px; height:calc(100vh - 60px);"></div>
+    </div>
+
+    <!-- ================= DASHBOARD VIEW ================= -->
+    <div id="dashboard-view" style="display:none; padding-top:120px; padding-left:20px; padding-right:20px; padding-bottom:40px; height:100vh; overflow-y:auto; background:#f8f9fa; color:#366A4F;">
+        <div style="max-width:800px; margin:0 auto;" id="dashboard-dynamic-content">
+            <!-- Dynamic Dashboard Metrics and Logs Injected via JS based on currentDomain -->
+        </div>
+    </div>
+
+    <!-- ================= NOTIFICATIONS VIEW ================= -->
+    <div id="notifications-view" style="display:none; padding-top:120px; padding-left:20px; padding-right:20px; padding-bottom:40px; height:100vh; overflow-y:auto; background:#f8f9fa; color:#366A4F;">
+        <div style="max-width:800px; margin:0 auto;">
+            <div id="amendments-header">
+                <h1 style="margin-bottom:10px;">Changes & Amendments</h1>
+                <p style="margin-bottom:20px; color:#64748b;">A secure audit log of all historical edits made to profiles and inspection logs. This section is exclusively visible to Administrators.</p>
+            </div>
+            <div id="amendments-denied" style="display:none; text-align:center; padding:40px 20px; background:#fef2f2; border:1px solid #fca5a5; border-radius:8px; margin-top:20px;">
+                <h2 style="color:#ef4444; margin-bottom:10px;">🚫 Permission Denied</h2>
+                <p style="color:#b91c1c;">You do not have Administrator privileges to view the audit trails.</p>
+            </div>
+            <div id="notifications-list" style="display:flex; flex-direction:column; gap:15px;">
+                <!-- Amendments injected here -->
+            </div>
+        </div>
+    </div>
+
+    <!-- ================= ADMIN CONSOLE VIEW ================= -->
+    <!-- ================= GLOBAL ADMIN VIEW ================= -->
+    <div id="global-admin-view" style="display:none; padding-top:120px; padding-left:20px; padding-right:20px; padding-bottom:120px; height:100%; overflow-y:auto; background:#f8fafc; color:#1e293b;">
+        <div style="max-width:900px; margin:0 auto;">
+            <div style="display:flex; flex-wrap:wrap; align-items:center; margin-bottom:20px; border-bottom:1px solid #1c5629; padding-bottom:10px;">
+                <h1 style="color:#1c5629; margin:0; width:100%;">🛡️ Global Personnel & Access Control</h1>
+            </div>
+
+            <!-- Approval Queue -->
+            <h2 style="color:#1c5629; margin-bottom:15px; font-size:1.2rem;">Officer Approval Queue</h2>
+            <div id="admin-approval-list" style="display:grid; grid-template-columns:1fr; gap:10px; margin-bottom:40px;">
+                <p style="color:#475569;">No pending approvals.</p>
+            </div>
+
+            <!-- Officer Leaderboard / Metrics -->
+            <h2 style="color:#1c5629; margin-bottom:15px; font-size:1.2rem;">Global Officer Performance Metrics</h2>
+            <div style="background:#1c5629; border-radius:8px; overflow:hidden; border:1px solid #1c5629;">
+                <table style="width:100%; border-collapse:collapse; text-align:left;">
+                    <thead style="background:#e2e8f0; border-bottom:2px solid #cbd5e1;">
+                        <tr>
+                            <th style="padding:12px 15px; color:#1e293b;">Officer Name</th>
+                            <th style="padding:12px 15px; color:#1e293b;">Status</th>
+                            <th style="padding:12px 15px; color:#1e293b;">Activity Score</th>
+                        </tr>
+                    </thead>
+                    <tbody id="admin-leaderboard-body">
+                        <!-- Injected via JS -->
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Deleted Shops Archive (Admin Override) -->
+            <h2 style="color:#ef4444; margin-top:40px; margin-bottom:15px; font-size:1.2rem;">🗑️ Deleted Shops Archive</h2>
+            <div id="admin-deleted-archive" style="display:grid; grid-template-columns:1fr; gap:10px; margin-bottom:40px;">
+                <p style="color:#475569;">No shops have been deleted.</p>
+            </div>
+
+            <!-- Database Backup (Admin Only) -->
+            <h2 style="color:#1c5629; margin-top:40px; margin-bottom:15px; font-size:1.2rem;">💾 Offline Database Backup</h2>
+            <div style="background:#1c5629; border-radius:8px; border:1px solid #1c5629; padding:15px; margin-bottom:40px;">
+                <p style="color:#1e293b; font-size:0.9rem; margin-bottom:15px;">Download a raw JSON snapshot of the entire District Database for offline records or external analysis.</p>
+                <button id="export-sync-btn" class="primary-btn" style="background: linear-gradient(135deg, #0f766e 0%, #1c5629 100%);">📥 Download JSON Backup</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ================= DOMAIN AUDIT VIEW ================= -->
+    <div id="domain-admin-view" style="display:none; padding-top:120px; padding-left:20px; padding-right:20px; padding-bottom:120px; height:100%; overflow-y:auto; background:#f8fafc; color:#1e293b;">
+        <div style="max-width:900px; margin:0 auto;">
+            <div style="display:flex; flex-wrap:wrap; align-items:center; margin-bottom:20px; border-bottom:1px solid #1c5629; padding-bottom:10px;">
+                <h1 style="color:#1c5629; margin:0; width:100%;" id="domain-audit-title">🔍 Domain Audit Console</h1>
+            </div>
+
+            <!-- Live Activity Feed -->
+            <h2 style="color:#366A4F; margin-top:10px; margin-bottom:15px; font-size:1.2rem;">📡 Domain Activity Feed</h2>
+            <div id="admin-activity-feed" style="background:#1c5629; border-radius:8px; border:1px solid #1c5629; padding:15px; max-height:400px; overflow-y:auto; display:flex; flex-direction:column; gap:10px;">
+                <p style="color:#475569; text-align:center;">Initializing feed...</p>
+            </div>
+
+            <!-- Domain Specific Auditing Tools can be appended here via JS if needed -->
+            <div id="domain-audit-tools" style="margin-top:40px;">
+            </div>
+        </div>
+    </div>
+
+    <!-- Add Shop Modal -->
+    <div id="add-shop-modal" class="modal-overlay">
+        <div class="modal-content">
+            <h2 id="add-shop-modal-title">Add New Tobacco Shop</h2>
+            <div class="form-group">
+                <label>Shop Name:</label>
+                <input type="text" id="new-shop-name" class="form-control" placeholder="E.g., Bismillah Paan Shop">
+            </div>
+            <div class="form-group">
+                <label>Owner Name:</label>
+                <input type="text" id="new-shop-owner" class="form-control" placeholder="E.g., Ali Khan">
+            </div>
+            <div class="form-group">
+                <label>Owner Phone Number:</label>
+                <input type="text" id="new-owner-phone" class="form-control" placeholder="E.g., 0300-1234567">
+            </div>
+            
+            <div class="form-group" style="background:#f8fafc; padding:10px; border-radius:6px; border:1px solid #cbd5e1; margin-bottom:15px;">
+                <label style="display:flex; align-items:center; gap:8px; cursor:pointer; font-weight:bold; color:#1c5629; margin-bottom:0;">
+                    <input type="checkbox" id="is-same-checkbox" style="width:18px; height:18px; accent-color:#366A4F;" checked>
+                    Is Owner & Shopkeeper the same? (Yes)
+                </label>
+            </div>
+            
+            <div class="form-group">
+                <label>Shopkeeper Name:</label>
+                <input type="text" id="new-shopkeeper-name" class="form-control" placeholder="E.g., Raza Bhai" disabled style="background-color:#e2e8f0; cursor:not-allowed;">
+            </div>
+            <div class="form-group">
+                <label>Shopkeeper Phone Number:</label>
+                <input type="text" id="new-shopkeeper-phone" class="form-control" placeholder="E.g., 0333-7654321" disabled style="background-color:#e2e8f0; cursor:not-allowed;">
+            </div>
+            <div class="form-group">
+                <label>Take Photo:</label>
+                <input type="file" id="shop-photo-input" class="form-control" accept="image/*" capture="environment">
+                <img id="shop-photo-preview" src="">
+            </div>
+            <div class="btn-group">
+                <button id="cancel-add-shop" class="primary-btn btn-cancel">Cancel</button>
+                <button id="save-shop-btn" class="primary-btn btn-submit">Save Shop</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Shop Dashboard / Raid History Modal (Used in Map View) -->
+    
+    <div id="shop-dashboard-modal" class="modal-overlay">
+        <div class="modal-content flex-modal">
+            <div class="modal-header-fixed">
+                <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:10px;">
+                <h2 id="dash-shop-name" style="margin-bottom:0; flex:1;">Shop Name</h2>
+                <div style="display:flex; gap:5px;">
+                    <button id="edit-shop-btn" class="raid-action-btn edit-btn">✏️ Edit Profile</button>
+                    <button id="delete-shop-btn" class="raid-action-btn btn-cancel" style="background:#b91c1c; display:none;">🗑️ Delete Shop</button>
+                </div>
+            </div>
+            </div>
+            <div class="modal-body-scrollable" style="padding:15px;">
+            
+            
+            <div style="background:#f8fafc; padding:10px; border-radius:6px; border:1px solid #cbd5e1; margin-bottom:15px;">
+                <p style="color:#334155; margin-bottom:4px;"><strong>Owner:</strong> <span id="dash-owner-name"></span> <span id="dash-owner-phone" style="color:#475569; font-size:0.9em; margin-left:5px;"></span></p>
+                <p style="color:#334155; margin-bottom:0;"><strong>Shopkeeper:</strong> <span id="dash-shopkeeper-name"></span> <span id="dash-shopkeeper-phone" style="color:#475569; font-size:0.9em; margin-left:5px;"></span></p>
+            </div>
+            
+            <div id="shop-history-container" style="margin-bottom:15px;"></div>
+
+            <img id="dash-shop-photo" src="" style="width:100%; height:120px; object-fit:cover; border-radius:8px; display:none; margin-bottom:15px; border:2px solid #334155;">
+            
+            <button id="open-raid-form-btn" class="primary-btn" style="background: linear-gradient(135deg, #ef4444 0%, #b91c1c 100%);">🚨 Log New Raid</button>
+            
+            <h3 style="margin-top:20px; margin-bottom:10px; font-size:1rem; border-bottom:1px solid #334155; padding-bottom:5px;">Raid History</h3>
+            <div id="raid-history-container" style="max-height: 200px; overflow-y: auto;"></div>
+            </div>
+            <div class="modal-footer-fixed">
+                <button id="close-dashboard-btn" class="primary-btn btn-cancel" style="width:100%;">Close</button>
+            </div>
+        </div>
+        </div>
+    </div>
+
+    <!-- Raid Log Form Modal (7 Columns for FBR) -->
+    <div id="raid-log-modal" class="modal-overlay">
+        <div class="modal-content">
+            <h2>Log Official Raid Seizure</h2>
+            <div class="form-group">
+                <label>Officer Name:</label>
+                <input type="text" id="raid-officer" class="form-control" placeholder="E.g., Sheraz Ahmed">
+            </div>
+            <div class="form-group">
+                <label>Officer Designation:</label>
+                <input type="text" id="raid-designation" class="form-control" placeholder="E.g., Mukhtiarkar U.T">
+            </div>
+            <div class="form-group">
+                <label>Total Packets Confiscated:</label>
+                <input type="number" id="raid-packets" class="form-control" placeholder="E.g., 250" min="0">
+            </div>
+            <div class="form-group">
+                <label>Photo Evidence (Optional - Add multiple photos):</label>
+                <input type="file" id="raid-photo-input" class="form-control" accept="image/*" capture="environment">
+                <div id="raid-photo-preview-container" style="display:flex; gap:10px; flex-wrap:wrap; margin-top:10px;"></div>
+            </div>
+            <div class="btn-group">
+                <button id="cancel-raid-btn" class="primary-btn btn-cancel">Cancel</button>
+                <button id="save-raid-btn" class="primary-btn btn-submit">Save Seizure</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Universal Entity Creation Modal -->
+    <div id="add-entity-modal" class="modal-overlay">
+        <div class="modal-content">
+            <h2 id="add-entity-modal-title">Add New Entity</h2>
+            <div class="form-group">
+                <label id="add-entity-name-label">Entity Name:</label>
+                <input type="text" id="new-entity-name" class="form-control" placeholder="Name">
+            </div>
+            <div id="fv-type-group" class="form-group" style="display:none;">
+                <label>Business Type:</label>
+                <select id="fv-vendor-type" class="form-control">
+                    <option value="Shop">Shop</option>
+                    <option value="Stall">Stall / Cart</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label>Owner Name:</label>
+                <input type="text" id="new-entity-owner" class="form-control" placeholder="Owner Name">
+            </div>
+            <div class="form-group">
+                <label>Owner Phone Number:</label>
+                <input type="text" id="new-entity-phone" class="form-control" placeholder="Phone Number">
+            </div>
+            <div class="form-group">
+                <label>Take Photo:</label>
+                <input type="file" id="entity-photo-input" class="form-control" accept="image/*" capture="environment">
+                <img id="entity-photo-preview" src="" style="cursor:pointer;" onclick="if(window.openGlobalViewer) window.openGlobalViewer(this.src)">
+            </div>
+            <div class="btn-group">
+                <button id="cancel-add-entity" class="primary-btn btn-cancel">Cancel</button>
+                <button id="save-entity-btn" class="primary-btn btn-submit">Save Profile</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Universal Entity Dashboard Modal -->
+    <div id="entity-dashboard-modal" class="modal-overlay">
+        <div class="modal-content">
+            <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:10px;">
+                <h2 id="dash-entity-name" style="margin-bottom:0; flex:1;">Entity Name</h2>
+                <div style="display:flex; gap:5px;">
+                    <button id="edit-entity-btn" class="raid-action-btn edit-btn">✏️ Edit Profile</button>
+                    <button id="delete-entity-btn" class="raid-action-btn btn-cancel" style="background:#b91c1c; display:none;">🗑️ Delete Profile</button>
+                </div>
+            </div>
+            
+            <div style="background:#f8fafc; padding:10px; border-radius:6px; border:1px solid #cbd5e1; margin-bottom:15px;">
+                <p style="color:#334155; margin-bottom:0;"><strong>Owner:</strong> <span id="dash-entity-owner-name"></span> <span id="dash-entity-owner-phone" style="color:#475569; font-size:0.9em; margin-left:5px;"></span></p>
+            </div>
+            
+            <div id="entity-history-container" style="margin-bottom:15px;"></div>
+
+            <img id="dash-entity-photo" src="" style="width:100%; height:120px; object-fit:cover; border-radius:8px; display:none; margin-bottom:15px; border:2px solid #334155; cursor:pointer;" onclick="if(window.openGlobalViewer) window.openGlobalViewer(this.src)">
+            
+            <button id="open-entity-activity-form-btn" class="primary-btn" style="background: linear-gradient(135deg, #ef4444 0%, #b91c1c 100%);">🚨 Log Activity</button>
+            
+            <h3 style="margin-top:20px; margin-bottom:10px; font-size:1rem; border-bottom:1px solid #334155; padding-bottom:5px;">Activity History</h3>
+            <div id="entity-activities-list"></div>
+            
+            <div style="margin-top:20px; text-align:right;">
+                <button id="close-entity-dash" class="primary-btn" style="width:auto; padding:8px 15px;">Close</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Domain 1: Wholesale Price Checking Modal -->
+    <div id="wholesale-price-modal" class="modal-overlay">
+        <div class="modal-content">
+            <h2 style="color:#1c5629;">Log Wholesale Inspection</h2>
+            <div class="form-group" style="display:none;">
+                <label>Target Mill/Chaki Name:</label>
+                <input type="text" id="wp-target-name" class="form-control">
+            </div>
+            <div class="form-group">
+                <label>Commodity Type:</label>
+                <input type="text" id="wp-commodity" class="form-control" placeholder="E.g., Flour No. 2.5">
+            </div>
+            <div class="form-group">
+                <label>Price Notified by Government (PKR):</label>
+                <input type="number" id="wp-notified-price" class="form-control" placeholder="0" min="0">
+            </div>
+            <div class="form-group">
+                <label>Price found at the Mill (PKR):</label>
+                <input type="number" id="wp-found-price" class="form-control" placeholder="0" min="0">
+            </div>
+            <div class="form-group">
+                <label>Violation Detected?</label>
+                <select id="wp-violation" class="form-control">
+                    <option value="no">No</option>
+                    <option value="yes">Yes</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label>Fine Imposed (PKR):</label>
+                <input type="number" id="wp-fine-amount" class="form-control" placeholder="0" min="0">
+            </div>
+            <div class="form-group">
+                <label>Sealing Action:</label>
+                <select id="wp-sealing" class="form-control">
+                    <option value="none">None</option>
+                    <option value="sealed_fine">Sealed with Fine</option>
+                    <option value="sealed_pending">Sealed pending payment</option>
+                </select>
+            </div>
+            <div class="form-group" style="margin-top: 10px;">
+                <label>Sealed At (Leave blank for current time):</label>
+                <input type="datetime-local" id="wp-sealing-time" class="form-control">
+            </div>
+            <div class="form-group">
+                <label>Photo Evidence:</label>
+                <input type="file" id="wp-photo" class="form-control" accept="image/*" capture="environment">
+                <img id="wp-photo-preview" src="" style="display:none; width:100px; height:100px; margin-top:10px; border-radius:4px; object-fit:cover;">
+            </div>
+            <div class="btn-group">
+                <button id="cancel-wp-btn" class="primary-btn btn-cancel">Cancel</button>
+                <button id="save-wp-btn" class="primary-btn btn-submit" style="background:#1c5629;">Save Inspection</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Domain 2: Essential Commodities Retail Modal -->
+    <div id="retail-price-modal" class="modal-overlay">
+        <div class="modal-content">
+            <h2 style="color:#1c5629;">Log Retail Inspection</h2>
+            <div class="form-group" style="display:none;">
+                <label>Target Retail Store Name:</label>
+                <input type="text" id="rp-target-name" class="form-control">
+            </div>
+            <div class="form-group">
+                <label>Category Checked:</label>
+                <input type="text" id="rp-category" class="form-control" placeholder="E.g., Pulses, Spices, Rice">
+            </div>
+            <div class="form-group">
+                <label>Notified Price (PKR):</label>
+                <input type="number" id="rp-notified-price" class="form-control" placeholder="E.g., 100" min="0">
+            </div>
+            <div class="form-group">
+                <label>Detected Price (PKR):</label>
+                <input type="number" id="rp-detected-price" class="form-control" placeholder="E.g., 120" min="0">
+            </div>
+            <div class="form-group">
+                <label>Rate List Displayed?</label>
+                <select id="rp-ratelist" class="form-control">
+                    <option value="yes">Yes</option>
+                    <option value="no">No</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label>Violation Detected?</label>
+                <select id="rp-violation" class="form-control">
+                    <option value="no">No</option>
+                    <option value="yes">Yes</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label>Fine Imposed (PKR):</label>
+                <input type="number" id="rp-fine-amount" class="form-control" placeholder="0" min="0">
+            </div>
+            <div class="form-group">
+                <label>Sealing Action:</label>
+                <select id="rp-sealing" class="form-control">
+                    <option value="none">None</option>
+                    <option value="sealed_fine">Sealed with Fine</option>
+                    <option value="sealed_pending">Sealed pending payment</option>
+                </select>
+            </div>
+            <div class="form-group" style="margin-top: 10px;">
+                <label>Sealed At (Leave blank for current time):</label>
+                <input type="datetime-local" id="rp-sealing-time" class="form-control">
+            </div>
+            <div class="form-group">
+                <label>Photo Evidence:</label>
+                <input type="file" id="rp-photo" class="form-control" accept="image/*" capture="environment">
+                <img id="rp-photo-preview" src="" style="display:none; width:100px; height:100px; margin-top:10px; border-radius:4px; object-fit:cover;">
+            </div>
+            <div class="btn-group">
+                <button id="cancel-rp-btn" class="primary-btn btn-cancel">Cancel</button>
+                <button id="save-rp-btn" class="primary-btn btn-submit" style="background:#1c5629;">Save Inspection</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Domain 3: Fruits & Vegetables Modal -->
+    <div id="fv-price-modal" class="modal-overlay">
+        <div class="modal-content">
+            <h2 style="color:#1c5629;">Log Fruits & Veg Inspection</h2>
+            <div class="form-group" style="display:none;">
+                <label>Target Vendor / Stall Location:</label>
+                <input type="text" id="fv-target-name" class="form-control">
+            </div>
+            <div class="form-group">
+                <label>Produce Type Checked:</label>
+                <input type="text" id="fv-produce" class="form-control" placeholder="E.g., Tomatoes, Onions">
+            </div>
+            <div class="form-group">
+                <label>Government Notified Rate (PKR):</label>
+                <input type="number" id="fv-notified-price" class="form-control" placeholder="E.g., 100" min="0">
+            </div>
+            <div class="form-group">
+                <label>Rate Found at Entity (PKR):</label>
+                <input type="number" id="fv-found-price" class="form-control" placeholder="E.g., 120" min="0">
+            </div>
+            <div class="form-group">
+                <label>Auction Rate vs Retail Rate Adherence:</label>
+                <select id="fv-violation" class="form-control">
+                    <option value="compliant">Compliant</option>
+                    <option value="non_compliant">Non-Compliant</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label>Fine Imposed (PKR):</label>
+                <input type="number" id="fv-fine-amount" class="form-control" placeholder="0" min="0">
+            </div>
+            <div class="form-group">
+                <label id="fv-sealing-label">Sealing Action:</label>
+                <select id="fv-sealing" class="form-control">
+                    <option value="none">None</option>
+                    <option value="sealed_fine" id="fv-sealing-opt1">Sealed with Fine</option>
+                    <option value="sealed_pending" id="fv-sealing-opt2">Sealed pending payment</option>
+                </select>
+            </div>
+            <div class="form-group" id="fv-sealing-time-group" style="display:none;">
+                <label>Sealed At (Leave blank for current time):</label>
+                <input type="datetime-local" id="fv-sealing-time" class="form-control">
+            </div>
+            <div class="form-group">
+                <label>Photo Evidence:</label>
+                <input type="file" id="fv-photo" class="form-control" accept="image/*" capture="environment">
+                <img id="fv-photo-preview" src="" style="display:none; width:100px; height:100px; margin-top:10px; border-radius:4px; object-fit:cover;">
+            </div>
+            <div class="btn-group">
+                <button id="cancel-fv-btn" class="primary-btn btn-cancel">Cancel</button>
+                <button id="save-fv-btn" class="primary-btn btn-submit" style="background:#1c5629;">Save Inspection</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Domain 4: LPG Gas Price Control Modal -->
+    <div id="lpg-price-modal" class="modal-overlay">
+        <div class="modal-content">
+            <h2 style="color:#fbbf24;">Log LPG Gas Inspection</h2>
+            <div class="form-group" style="display:none;">
+                <label>Target LPG Outlet Name:</label>
+                <input type="text" id="lpg-target-name" class="form-control">
+            </div>
+            <div class="form-group">
+                <label>Notified vs Charged Rate (Violation?):</label>
+                <select id="lpg-violation" class="form-control">
+                    <option value="no">Compliant</option>
+                    <option value="yes">Overcharging</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label>Government Notified Rate (PKR/Kg):</label>
+                <input type="number" id="lpg-notified-price" class="form-control" placeholder="E.g., 3000" min="0">
+            </div>
+            <div class="form-group">
+                <label>Rate Found at Outlet (PKR/Kg):</label>
+                <input type="number" id="lpg-found-price" class="form-control" placeholder="E.g., 3200" min="0">
+            </div>
+            <div class="form-group">
+                <label>Fine Imposed (PKR):</label>
+                <input type="number" id="lpg-fine-amount" class="form-control" placeholder="0" min="0">
+            </div>
+            <div class="form-group">
+                <label>Sealing Action:</label>
+                <select id="lpg-sealing" class="form-control">
+                    <option value="none">None</option>
+                    <option value="sealed_fine">Sealed with Fine</option>
+                    <option value="sealed_pending">Sealed pending payment</option>
+                </select>
+            </div>
+            <div class="form-group" style="margin-top: 10px;">
+                <label>Sealed At (Leave blank for current time):</label>
+                <input type="datetime-local" id="lpg-sealing-time" class="form-control">
+            </div>
+            <div class="form-group">
+                <label>Photo Evidence:</label>
+                <input type="file" id="lpg-photo" class="form-control" accept="image/*" capture="environment">
+                <img id="lpg-photo-preview" src="" style="display:none; width:100px; height:100px; margin-top:10px; border-radius:4px; object-fit:cover;">
+            </div>
+            <div class="btn-group">
+                <button id="cancel-lpg-btn" class="primary-btn btn-cancel">Cancel</button>
+                <button id="save-lpg-btn" class="primary-btn btn-submit" style="background:#fbbf24; color:black;">Save Inspection</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Domain 5: Petrol Station Quantity & Price Check Modal -->
+    <div id="petrol-check-modal" class="modal-overlay">
+        <div class="modal-content">
+            <h2 style="color:#fbbf24;">Log Petrol Pump Inspection</h2>
+            <div class="form-group" style="display:none;">
+                <label>Target Petrol Pump Name:</label>
+                <input type="text" id="petrol-target-name" class="form-control">
+            </div>
+            <div class="form-group">
+                <label>Price Adherence / Quantity Measure:</label>
+                <select id="petrol-violation" class="form-control">
+                    <option value="no">Compliant (Accurate)</option>
+                    <option value="yes_price">Price Violation</option>
+                    <option value="yes_quantity">Short Measure (Quantity)</option>
+                    <option value="yes_both">Both</option>
+                </select>
+            </div>
+            
+            <div id="petrol-fuel-types-group" class="form-group" style="display:none; background:#f8fafc; padding:10px; border-radius:8px; border:1px solid #e2e8f0; margin-top:10px;">
+                <label style="margin-bottom:8px; display:block;">Checked Fuel Type(s):</label>
+                <div style="display:flex; gap:15px; flex-wrap:wrap;">
+                    <label style="font-weight:normal; display:flex; align-items:center; gap:5px; margin:0;">
+                        <input type="checkbox" id="fuel-type-petrol" value="Petrol" onchange="if(window.togglePetrolQuantityFields) window.togglePetrolQuantityFields()"> Petrol
+                    </label>
+                    <label style="font-weight:normal; display:flex; align-items:center; gap:5px; margin:0;">
+                        <input type="checkbox" id="fuel-type-hioctane" value="Hi-Octane" onchange="if(window.togglePetrolQuantityFields) window.togglePetrolQuantityFields()"> Hi-Octane
+                    </label>
+                    <label style="font-weight:normal; display:flex; align-items:center; gap:5px; margin:0;">
+                        <input type="checkbox" id="fuel-type-diesel" value="Diesel" onchange="if(window.togglePetrolQuantityFields) window.togglePetrolQuantityFields()"> Diesel
+                    </label>
+                </div>
+            </div>
+
+            <div id="petrol-quant-petrol-group" class="form-group" style="display:none;">
+                <label>Petrol Quantity Recorded for Charge of 1 Litre (ml):</label>
+                <input type="number" id="petrol-quant-petrol" class="form-control" placeholder="E.g., 980" max="1000">
+            </div>
+            <div id="petrol-quant-hioctane-group" class="form-group" style="display:none;">
+                <label>Hi-Octane Quantity Recorded for Charge of 1 Litre (ml):</label>
+                <input type="number" id="petrol-quant-hioctane" class="form-control" placeholder="E.g., 980" max="1000">
+            </div>
+            <div id="petrol-quant-diesel-group" class="form-group" style="display:none;">
+                <label>Diesel Quantity Recorded for Charge of 1 Litre (ml):</label>
+                <input type="number" id="petrol-quant-diesel" class="form-control" placeholder="E.g., 980" max="1000">
+            </div>
+            <div class="form-group">
+                <label>Fine Imposed (PKR):</label>
+                <input type="number" id="petrol-fine-amount" class="form-control" placeholder="0" min="0">
+            </div>
+            <div class="form-group">
+                <label>Sealing Action (Nozzles/Station):</label>
+                <select id="petrol-sealing" class="form-control">
+                    <option value="none">None</option>
+                    <option value="sealed_fine">Sealed with Fine</option>
+                    <option value="sealed_pending">Sealed pending payment</option>
+                </select>
+            </div>
+            <div class="form-group" style="margin-top: 10px;">
+                <label>Sealed At (Leave blank for current time):</label>
+                <input type="datetime-local" id="petrol-sealing-time" class="form-control">
+            </div>
+            <div class="form-group">
+                <label>Photo Evidence:</label>
+                <input type="file" id="petrol-photo" class="form-control" accept="image/*" capture="environment">
+                <img id="petrol-photo-preview" src="" style="display:none; width:100px; height:100px; margin-top:10px; border-radius:4px; object-fit:cover;">
+            </div>
+            <div class="btn-group">
+                <button id="cancel-petrol-btn" class="primary-btn btn-cancel">Cancel</button>
+                <button id="save-petrol-btn" class="primary-btn btn-submit" style="background:#fbbf24; color:black;">Save Inspection</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Domain 6: Anti-Hoarding Modal -->
+    <div id="anti-hoarding-modal" class="modal-overlay">
+        <div class="modal-content">
+            <h2 style="color:#d97706;">Log Anti-Hoarding Raid</h2>
+            <div class="form-group">
+                <label>Target Godown / Storage:</label>
+                <input type="text" id="ah-target-name" class="form-control" disabled style="background-color:#e2e8f0; font-weight:bold;">
+            </div>
+            <div class="form-group">
+                <label>Commodity Type:</label>
+                <select id="ah-commodity" class="form-control">
+                    <option value="wheat">Wheat</option>
+                    <option value="sugar">Sugar</option>
+                    <option value="fertilizer">Fertilizer</option>
+                    <option value="other">Other</option>
+                </select>
+            </div>
+            
+            <div class="form-group">
+                <label>Weight Allowed by Government (Metric Tons):</label>
+                <input type="number" id="ah-weight-allowed" class="form-control" placeholder="E.g., 100" min="0">
+            </div>
+            <div class="form-group">
+                <label>Weight Found at Godown/Storage (Metric Tons):</label>
+                <input type="number" id="ah-weight-found" class="form-control" placeholder="E.g., 150" min="0">
+            </div>
+            <div class="form-group">
+                <label>Violation Detected?</label>
+                <select id="ah-violation" class="form-control">
+                    <option value="No">No</option>
+                    <option value="Yes">Yes</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label>FIR Linkage / Details:</label>
+                <input type="text" id="ah-fir-details" class="form-control" placeholder="E.g., FIR No. 123/2026">
+            </div>
+            <div class="form-group">
+                <label>Photographic Proof of Seizure:</label>
+                <input type="file" id="ah-photo-proof" class="form-control" accept="image/*" capture="environment">
+                <img id="ah-photo-proof-preview" src="" style="display:none; width:100px; height:100px; margin-top:10px; border-radius:4px; object-fit:cover; cursor:pointer;" onclick="if(window.openGlobalViewer) window.openGlobalViewer(this.src)">
+            </div>
+            <div class="btn-group">
+                <button id="cancel-ah-btn" class="primary-btn btn-cancel">Cancel</button>
+                <button id="save-ah-btn" class="primary-btn btn-submit" style="background:#d97706;">Save Log</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Domain 7: Anti-Encroachment Modal -->
+    <!-- Domain 7: Anti-Encroachment Modal -->
+    <div id="anti-encroachment-modal" class="modal-overlay">
+        <div class="modal-content">
+            <h2 style="color:#dc2626;">Log Encroachment Clearance</h2>
+            <div class="form-group">
+                <label>Location / Artery Name:</label>
+                <input type="text" id="ae-location" class="form-control" placeholder="E.g., Wadhu Wah Road">
+            </div>
+            <div class="form-group">
+                <label>Reclaimed Space Size (Acres / Sq Ft):</label>
+                <input type="text" id="ae-reclaimed-size" class="form-control" placeholder="E.g., 2 Acres">
+            </div>
+            <div class="form-group">
+                <label>Estimated Value (PKR in Millions):</label>
+                <input type="number" id="ae-value-pkr" class="form-control" placeholder="E.g., 50" min="0" step="0.1">
+            </div>
+            <div class="form-group">
+                <label>Reason of Action:</label>
+                <select id="ae-reason" class="form-control" onchange="if(this.value==='Other'){document.getElementById('ae-reason-other-group').style.display='block';}else{document.getElementById('ae-reason-other-group').style.display='none';}">
+                    <option value="Court Order">Court Order</option>
+                    <option value="Orders of DC Hyderabad">Orders of DC Hyderabad</option>
+                    <option value="Orders of Commissioner Hyderabad">Orders of Commissioner Hyderabad</option>
+                    <option value="Encroachment Report by Office">Encroachment Report by Office</option>
+                    <option value="Other">Other</option>
+                </select>
+            </div>
+            <div class="form-group" id="ae-reason-other-group" style="display:none;">
+                <label>Please Specify Reason:</label>
+                <input type="text" id="ae-reason-other" class="form-control" placeholder="Type reason manually...">
+            </div>
+            <div class="form-group">
+                <label>Before Operation Photo:</label>
+                <input type="file" id="ae-photo-before" class="form-control" accept="image/*" capture="environment">
+                <img id="ae-photo-before-preview" src="" style="display:none; width:100px; height:100px; margin-top:10px; border-radius:4px; object-fit:cover; cursor:pointer;" onclick="if(window.openGlobalViewer) window.openGlobalViewer(this.src)">
+            </div>
+            <div class="form-group">
+                <label>After Operation Photo:</label>
+                <input type="file" id="ae-photo-after" class="form-control" accept="image/*" capture="environment">
+                <img id="ae-photo-after-preview" src="" style="display:none; width:100px; height:100px; margin-top:10px; border-radius:4px; object-fit:cover; cursor:pointer;" onclick="if(window.openGlobalViewer) window.openGlobalViewer(this.src)">
+            </div>
+            <div class="btn-group">
+                <button id="cancel-ae-btn" class="primary-btn btn-cancel">Cancel</button>
+                <button id="save-ae-btn" class="primary-btn btn-submit" style="background:#dc2626;">Save Operation</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Export Date Range Modal -->
+    <div id="export-date-modal" class="modal-overlay">
+        <div class="modal-content">
+            <h2>Select Report Date Range</h2>
+            <p style="color:#cbd5e1; font-size:0.85rem; margin-bottom:15px;">Leave both fields blank to export ALL records.</p>
+            <div class="form-group">
+                <label>From Date:</label>
+                <input type="date" id="export-from-date" class="form-control">
+            </div>
+            <div class="form-group">
+                <label>To Date:</label>
+                <input type="date" id="export-to-date" class="form-control">
+            </div>
+            <div class="btn-group">
+                <button onclick="document.getElementById('export-modal').style.display='none'" class="primary-btn btn-cancel">Cancel</button>
+                <button id="confirm-export-btn" class="primary-btn btn-submit" style="background: linear-gradient(135deg, #366A4F 0%, #366A4F 100%);">📥 Download Report</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Image Cropper Modal -->
+    <div id="cropper-modal" class="modal-overlay" style="z-index:20000; display:none;">
+        <div class="modal-content" style="max-width:95vw; width:500px;">
+            <h2 style="margin-bottom:10px;">Standardize Image (1:1)</h2>
+            <p style="color:#cbd5e1; font-size:0.85rem; margin-bottom:15px;">Pinch to zoom, drag to pan. Must be exactly 1:1 square.</p>
+            <div style="width:100%; height:300px; background:#366A4F; overflow:hidden; border-radius:8px;">
+                <img id="cropper-image" src="" style="max-width:100%; display:block;">
+            </div>
+            <div class="btn-group" style="margin-top:20px;">
+                <button id="cancel-crop-btn" class="primary-btn btn-cancel">Cancel</button>
+                <button id="confirm-crop-btn" class="primary-btn btn-submit">Save Crop</button>
+            </div>
+        </div>
+    </div>
+
+        <!-- INSTRUCTIONS / CONVERSATIONS VIEW -->
+        <div id="instructions-view" style="display:none; padding-top:80px; height:100%; overflow-y:auto; background:#f8fafc; color:#1c5629;">
+            <div style="max-width:600px; margin:0 auto; padding:20px;">
+                <h1 style="color:#1c5629; margin-top:0; border-bottom:2px solid #cbd5e1; padding-bottom:10px;">💬 Instructions & Communications</h1>
+                
+                <div id="admin-new-conv-container" style="display:none; margin-bottom:15px; text-align:right;">
+                    <button class="primary-btn" style="width:auto; padding:8px 15px;" onclick="document.getElementById('new-conversation-modal').style.display='flex'; window.populateNewConvDropdown();">+ Start New Conversation</button>
+                </div>
+                
+                <div id="instructions-inbox" style="display:flex; flex-direction:column; gap:10px;">
+                    <!-- Threads list injected here -->
+                </div>
+            </div>
+        </div>
+        
+        <!-- Chat View -->
+        <div id="chat-view" style="display:none; margin-top:60px; height:calc(100dvh - 60px); background:#f8fafc; flex-direction:column;">
+            <div style="background:#1c5629; padding:15px 20px; color:white; display:flex; justify-content:space-between; align-items:center;">
+                <div style="display:flex; align-items:center; gap:15px;">
+                    <button id="close-chat-btn" style="background:transparent; border:none; color:#38bdf8; font-size:1.8rem; cursor:pointer; padding:0;">&#8592;</button>
+                    <h3 id="chat-header-title" style="margin:0; font-size:1.2rem;">Chat</h3>
+                </div>
+            </div>
+            <div id="chat-messages-container" style="flex:1; overflow-y:auto; padding:15px; display:flex; flex-direction:column; gap:10px; background:#e2e8f0;">
+                <!-- Bubbles -->
+            </div>
+            <div style="padding:15px; background:white; border-top:1px solid #cbd5e1; display:flex; gap:10px; padding-bottom:30px;">
+                <input type="text" id="chat-input-field" class="form-control" style="flex:1; margin:0;" placeholder="Type message (No profanity)...">
+                <button id="chat-send-btn" class="primary-btn" style="width:auto; margin:0; padding:10px 25px;">Send</button>
+            </div>
+        </div>
+        
+    </div> <!-- END APP CONTAINER -->
+
+    <!-- New Conversation Modal -->
+    <div id="new-conversation-modal" class="modal-overlay" style="z-index:9000;">
+        <div class="modal-content" style="display:flex; flex-direction:column; max-width:500px;">
+            <h2 style="border-bottom:2px solid #366A4F; color:#1c5629; margin-bottom:15px;">Start Conversation</h2>
+            
+            <div class="form-group"><label style="display:block; font-weight:bold; margin-bottom:5px; color:#334155;">Select Officer:</label>
+            <select id="new-conv-officer-select" class="form-input" style="margin-bottom:15px;">
+                <option value="">Loading officers...</option>
+            </select>
+            
+            <label style="display:block; font-weight:bold; margin-bottom:5px; color:#334155;">Initial Instruction:</label>
+            <textarea id="new-conv-initial-msg" class="form-input" rows="3" placeholder="Type your instruction..." style="margin-bottom:15px;"></textarea>
+            
+            <div style="display:flex; flex-direction:column; gap:10px;">
+                <button id="new-conv-start-btn" class="primary-btn" style="margin:0;">Send & Open Chat</button>
+                <button class="secondary-btn" style="margin:0;" onclick="document.getElementById('new-conversation-modal').style.display='none'">Cancel</button>
+            </div>
+            </div> <!-- Close form-group -->
+        </div>
+    </div>
+    
+    <!-- View Inspection Log Modal -->
+    <div id="view-inspection-modal" class="modal-overlay" style="z-index:9500; display:none;">
+        <div class="modal-content" style="max-width:560px; padding:25px; display:flex; flex-direction:column; gap:0; max-height:90vh; overflow-y:auto;">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:18px; border-bottom:2px solid #1c5629; padding-bottom:12px;">
+                <h2 id="view-insp-title" style="color:#1c5629; margin:0; font-size:1.2rem;">Inspection Log</h2>
+                <button onclick="document.getElementById('view-inspection-modal').style.display='none'" style="background:none; border:none; font-size:1.5rem; cursor:pointer; color:#475569; line-height:1;">&times;</button>
+            </div>
+
+            <!-- Meta -->
+            <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-bottom:16px;">
+                <div style="background:#f1fdf5; border:1px solid #bbf7d0; border-radius:8px; padding:10px;">
+                    <p style="margin:0; font-size:0.72rem; color:#475569; text-transform:uppercase; letter-spacing:.5px;">Entity / Vendor</p>
+                    <p id="view-insp-entity" style="margin:4px 0 0; font-weight:700; color:#0f172a; font-size:0.95rem;">—</p>
+                </div>
+                <div style="background:#f1fdf5; border:1px solid #bbf7d0; border-radius:8px; padding:10px;">
+                    <p style="margin:0; font-size:0.72rem; color:#475569; text-transform:uppercase; letter-spacing:.5px;">Inspecting Officer</p>
+                    <p id="view-insp-officer" style="margin:4px 0 0; font-weight:700; color:#0f172a; font-size:0.95rem;">—</p>
+                </div>
+                <div style="background:#f1fdf5; border:1px solid #bbf7d0; border-radius:8px; padding:10px;">
+                    <p style="margin:0; font-size:0.72rem; color:#475569; text-transform:uppercase; letter-spacing:.5px;">Date &amp; Time</p>
+                    <p id="view-insp-date" style="margin:4px 0 0; font-weight:600; color:#0f172a; font-size:0.9rem;">—</p>
+                </div>
+                <div style="background:#f1fdf5; border:1px solid #bbf7d0; border-radius:8px; padding:10px;">
+                    <p style="margin:0; font-size:0.72rem; color:#475569; text-transform:uppercase; letter-spacing:.5px;">Fine Imposed</p>
+                    <p id="view-insp-fine" style="margin:4px 0 0; font-weight:700; color:#dc2626; font-size:1rem;">Rs 0</p>
+                </div>
+            </div>
+
+            <!-- Domain-specific fields -->
+            <div id="view-insp-fields" style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:8px; padding:14px; margin-bottom:16px; display:flex; flex-direction:column; gap:8px;">
+                <!-- Injected by JS -->
+            </div>
+
+            <!-- Sealing Status -->
+            <div id="view-insp-status-row" style="display:flex; gap:10px; margin-bottom:16px; flex-wrap:wrap;"></div>
+
+            <!-- De-Seal Info -->
+            <div id="view-insp-deseal-section" style="display:none; background:#f0fdf4; border:1px solid #86efac; border-radius:8px; padding:12px; margin-bottom:16px;">
+                <p style="margin:0 0 4px; font-weight:700; color:#15803d;">🔓 De-Sealed</p>
+                <p style="margin:0; font-size:0.85rem; color:#166534;"><strong>At:</strong> <span id="view-insp-deseal-time">—</span></p>
+                <p style="margin:4px 0 0; font-size:0.85rem; color:#166534;"><strong>Reason:</strong> <span id="view-insp-deseal-reason">—</span></p>
+            </div>
+
+            <!-- Photo -->
+            <div id="view-insp-photo-container" style="display:none; margin-bottom:16px;">
+                <p style="margin:0 0 6px; font-weight:600; color:#334155; font-size:0.85rem;">📷 Inspection Photo</p>
+                <img id="view-insp-photo" src="" style="width:100%; max-height:200px; object-fit:cover; border-radius:8px; border:1px solid #cbd5e1; cursor:pointer;" onclick="if(window.openGlobalViewer) window.openGlobalViewer(this.src)">
+            </div>
+
+            <!-- Close -->
+            <button onclick="document.getElementById('view-inspection-modal').style.display='none'" class="secondary-btn" style="margin-top:4px;">Close</button>
+        </div>
+    </div>
+    
+    <!-- De-Seal Reason Modal -->
+    <div id="deseal-modal" class="modal-overlay" style="z-index:9000; display:none;">
+        <div class="modal-content" style="display:flex; flex-direction:column; max-width:500px;">
+            <h2 id="deseal-modal-title" style="border-bottom:2px solid #366A4F; color:#1c5629; margin-bottom:15px;">De-Seal Entity</h2>
+            <div class="form-group">
+                <label style="font-weight:bold;">Date & Time of De-Sealing:</label>
+                <input type="text" id="deseal-datetime" class="form-control" placeholder="e.g., 2026-07-12 14:00">
+            </div>
+            <div class="form-group" style="margin-top:10px;">
+                <label style="font-weight:bold;">Reason for De-Sealing:</label>
+                <select id="deseal-reason-select" class="form-control" onchange="if(this.value==='Other'){document.getElementById('deseal-other-container').style.display='block';}else{document.getElementById('deseal-other-container').style.display='none';}">
+                    <option value="" disabled selected>-- Select a Reason --</option>
+                    <option value="Fine paid">Fine paid</option>
+                    <option value="Violation Removed">Violation Removed</option>
+                    <option value="Other">Other</option>
+                </select>
+            </div>
+            <div id="deseal-other-container" class="form-group" style="display:none; margin-top:10px;">
+                <label style="font-weight:bold;">Specify Other Reason:</label>
+                <input type="text" id="deseal-other-input" class="form-control" placeholder="e.g., Call by Commissioner, etc.">
+            </div>
+            <div style="display:flex; flex-direction:column; gap:10px; margin-top:20px;">
+                <button id="deseal-submit-btn" class="primary-btn" style="margin:0; background:#dc2626;">Confirm De-Seal</button>
+                <button class="secondary-btn" style="margin:0;" onclick="document.getElementById('deseal-modal').style.display='none'">Cancel</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Edit Profile Modal -->
+    <div id="edit-profile-modal" class="modal-overlay">
+        <div class="modal-content">
+            <h2 style="border-bottom:2px solid #366A4F; color:#1c5629; margin-bottom:15px;">Edit Profile</h2>
+            <div class="form-group"><p id="edit-profile-cooldown-msg" style="color:#ef4444; font-size:0.85rem; margin-bottom:15px; display:none;"></p></div>
+            <div id="edit-profile-form">
+                <div class="form-group"><label>Full Name:</label><input type="text" id="edit-name" class="form-control"></div>
+                <div class="form-group"><label>Designation:</label><input type="text" id="edit-designation" class="form-control"></div>
+                <div class="form-group"><label>Date of Joining Office:</label><input type="date" id="edit-doj" class="form-control"></div>
+                <div class="form-group"><label>Supervising Officer:</label><input type="text" id="edit-reporting" class="form-control"></div>
+                <div class="form-group"><label>Date of Birth:</label><input type="date" id="edit-dob" class="form-control"></div>
+            </div>
+            <div class="btn-group" style="flex-direction:column; gap:5px; margin-top:10px;">
+                <button id="save-profile-btn" class="primary-btn" style="background:#366A4F; margin-top:10px;">💾 Save Changes</button>
+                <button onclick="document.getElementById('edit-profile-modal').style.display='none'" class="secondary-btn" style="width:100%; margin-top:5px;">Cancel</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- User Profile Modal -->
+    <div id="user-profile-modal" class="modal-overlay">
+        <div class="modal-content">
+            <h2 style="border-bottom:2px solid #366A4F; color:#1c5629; margin-bottom:15px;">Officer Profile</h2>
+            <div class="dynamic-modal-inner">
+                <p><strong>Name:</strong> <span id="prof-name"></span></p>
+                <p><strong>Designation:</strong> <span id="prof-designation"></span></p>
+                <p><strong>Date of Joining:</strong> <span id="prof-doj"></span></p>
+                <p><strong>Supervising Officer:</strong> <span id="prof-reporting"></span></p>
+                <p><strong>Date of Birth:</strong> <span id="prof-dob"></span></p>
+                <button id="edit-profile-modal-btn" class="nav-btn" style="width:100%; background:#334155; margin-top:10px; color:white;">✏️ Edit Profile</button>
+                <button id="reset-password-modal-btn" class="nav-btn" style="width:100%; background:#b91c1c; margin-top:10px; color:white;">🔑 Reset Password</button>
+            </div>
+            
+            <h3 style="font-size:1.1rem; color:#1c5629; margin-bottom:10px;">Device Synchronization</h3>
+            <p style="font-size:0.8rem; color:#475569; margin-bottom:15px;">Export your securely encrypted data to synchronize with another device, or import a file from another device to merge records.</p>
+            
+            <button id="export-sync-btn" class="primary-btn" style="background: linear-gradient(135deg, #8b5cf6 0%, #6d28d9 100%); margin-bottom:10px;">📤 Export Sync File</button>
+            <input type="file" id="import-sync-file-modal" style="display:none;" accept=".sync,.qsmd,.json">
+            <button id="import-sync-btn" class="primary-btn" style="background: linear-gradient(135deg, #366A4F 0%, #366A4F 100%); margin-bottom:15px;" onclick="document.getElementById('import-sync-file-modal').click();">📥 Import & Merge Data</button>
+            <button id="logout-btn" class="primary-btn" style="background: #ef4444; margin-bottom:10px; margin-top:20px;">Logout</button>
+            <button id="close-profile-btn" class="primary-btn btn-cancel">Close</button>
+        </div>
+    </div>
+
+    <!-- Change Password Modal -->
+    <div id="change-password-modal" class="modal-overlay" style="display:none; z-index:16000;">
+        <div class="modal-content">
+            <h2 style="border-bottom:2px solid #b91c1c; color:#7f1d1d; margin-bottom:15px;">Change Password</h2>
+            <div class="form-group"><p id="change-password-msg" style="color:#ef4444; font-size:0.85rem; margin-bottom:15px; display:none;"></p></div>
+            <div id="change-password-form">
+                <div class="form-group"><label>Current Password:</label><input type="password" id="cp-current" class="form-control" placeholder="Enter current password"></div>
+                <div class="form-group"><label>New Password:</label><input type="password" id="cp-new" class="form-control" placeholder="Enter new password (min 6 chars)"></div>
+                <div class="form-group"><label>Confirm New Password:</label><input type="password" id="cp-confirm" class="form-control" placeholder="Confirm new password"></div>
+            </div>
+            <div class="btn-group" style="flex-direction:column; gap:5px; margin-top:10px;">
+                <button id="submit-change-password-btn" class="primary-btn" style="background:#b91c1c; margin-top:10px;">Update Password</button>
+                <button onclick="document.getElementById('change-password-modal').style.display='none'" class="secondary-btn" style="width:100%; margin-top:5px;">Cancel</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Read-Only Officer Profile Modal -->
+    <div id="officer-profile-modal" class="modal-overlay" style="display:none; z-index:15000;">
+        <div class="modal-content">
+            <h2 style="border-bottom:2px solid #366A4F; color:#1c5629; margin-bottom:15px;">Officer Profile</h2>
+            <div style="background:#f8fafc; padding:15px; border-radius:8px; border:1px solid #cbd5e1; margin-bottom:20px;">
+                <p><strong>Name:</strong> <span id="ro-prof-name"></span></p>
+                <p><strong>Designation:</strong> <span id="ro-prof-designation"></span></p>
+                <p><strong>Date of Joining:</strong> <span id="ro-prof-doj"></span></p>
+                <p><strong>Supervising Officer:</strong> <span id="ro-prof-reporting"></span></p>
+                <p><strong>Date of Birth:</strong> <span id="ro-prof-dob"></span></p>
+                <p><strong>Status:</strong> <span id="ro-prof-status" style="font-weight:bold;"></span></p>
+            </div>
+            <button onclick="document.getElementById('officer-profile-modal').style.display='none'" class="secondary-btn" style="width:100%;">Close</button>
+        </div>
+    </div>
+
+    <!-- Password Prompt Modal (For Import Verification) -->
+    <div id="password-prompt-modal" class="modal-overlay" style="z-index:5000;">
+        <div class="modal-content">
+            <h2 style="color:#b91c1c;">Decryption Required</h2>
+            <p style="font-size:0.85rem; color:#475569; margin-bottom:15px;">Please enter the password that was used to encrypt this synchronization file.</p>
+            <input type="password" id="decrypt-password-input" class="form-control" placeholder="Enter original password" style="margin-bottom:15px;">
+            <div class="btn-group">
+                <button id="cancel-decrypt-btn" class="primary-btn btn-cancel">Cancel</button>
+                <button id="submit-decrypt-btn" class="primary-btn btn-submit" style="background:#b91c1c;">Decrypt & Import</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Leaflet JS -->
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    
+    <!-- ExcelJS for Styled Excel Export -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/exceljs/4.3.0/exceljs.min.js"></script>
+
+    <!-- Cropper.js for Image Standardization -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.js"></script>
+    
+    <!-- GeoJSON Boundary Data -->
+    <script src="boundary.js"></script>
+
+    <!-- Firebase SDK (Modular) -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+        import { getAnalytics } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-analytics.js";
+        import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut, onAuthStateChanged, sendPasswordResetEmail, setPersistence, browserSessionPersistence, browserLocalPersistence, updatePassword } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+        import { initializeFirestore, persistentLocalCache, persistentMultipleTabManager, collection, getDocs, getDoc, onSnapshot, doc, setDoc, deleteDoc, query, where, enableNetwork, disableNetwork } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+        import { getStorage, ref, uploadString, getDownloadURL } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-storage.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyCy37vA-4mV2afHpYghNuOH8B5smaeHlYg",
+            authDomain: "acqasimabadhyd.firebaseapp.com",
+            projectId: "acqasimabadhyd",
+            storageBucket: "acqasimabadhyd.firebasestorage.app",
+            messagingSenderId: "583999799623",
+            appId: "1:583999799623:web:06d64e3328a275f5f40c62"
+        };
+
+        // Initialize Firebase
+        const app = initializeApp(firebaseConfig);
+        const analytics = getAnalytics(app);
+        const auth = getAuth(app);
+        // Persistence is handled by app.js on login
+        
+        // Enable Offline Persistence for PWA capabilities
+        const db = initializeFirestore(app, {
+            localCache: persistentLocalCache({tabManager: persistentMultipleTabManager()})
+        });
+        
+        const storage = getStorage(app);
+
+        // Expose Firebase tools to the global window for app.js
+        window.firebaseDB = db;
+        window.firebaseStorage = storage;
+        window.firebaseAuth = auth;
+        window.fbSignIn = signInWithEmailAndPassword;
+        window.fbCreateUser = createUserWithEmailAndPassword;
+        window.fbSignOut = signOut;
+        window.fbOnAuthStateChanged = onAuthStateChanged;
+        window.fbSendPasswordResetEmail = sendPasswordResetEmail;
+        window.fbUpdatePassword = updatePassword;
+        window.fbCollection = collection;
+        window.fbDoc = doc;
+        window.fbSetPersistence = setPersistence;
+        window.fbBrowserSession = browserSessionPersistence;
+        window.fbBrowserLocal = browserLocalPersistence;
+        window.fbSetDoc = setDoc;
+        window.fbDeleteDoc = deleteDoc;
+        window.fbGetDocs = getDocs;
+        window.fbGetDoc = getDoc;
+        window.fbOnSnapshot = onSnapshot;
+        window.fbQuery = query;
+        window.fbWhere = where;
+        window.fbEnableNetwork = enableNetwork;
+        window.fbDisableNetwork = disableNetwork;
+        window.fbRef = ref;
+        window.fbUploadString = uploadString;
+        window.fbGetDownloadURL = getDownloadURL;
+        
+        // Dispatch event so app.js knows Firebase is ready
+        window.dispatchEvent(new Event('firebase-ready'));
+    </script>
+    
+    <!-- Custom JS -->
+    <script src="app.js?v=3.97"></script>
+    
+    <!-- PWA Service Worker Registration -->
+    <script>
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('./sw.js')
+                    .then(reg => console.log('ServiceWorker registered successfully.', reg))
+                    .catch(err => console.warn('ServiceWorker registration failed: ', err));
+            });
+        }
+    </script>
+
+    <!-- PWA Install Banner (Native App Prompt) -->
+    <div id="pwa-install-banner" style="display:none; position:fixed; bottom:20px; left:50%; transform:translateX(-50%); width:90%; max-width:400px; background:#022c22; border:2px solid #366A4F; padding:20px; border-radius:12px; z-index:10000; box-shadow:0 15px 35px rgba(0,0,0,0.5); text-align:center; color:white; font-family:'Instrument Sans', sans-serif;">
+        <h3 style="margin-bottom:8px; font-size:1.15rem; color:#1c5629; font-family:'Instrument Serif', serif;">📱 Install Native App</h3>
+        <p style="font-size:0.9rem; margin-bottom:15px; color:#cbd5e1;">Install the Seizure Dashboard to your device for instant, full-screen access without a browser.</p>
+        <div style="display:flex; gap:10px;">
+            <button id="pwa-dismiss-btn" class="nav-btn" style="flex:1; background:#334155; color:white; min-height:44px; border-radius:8px; border:none; font-weight:bold;">Not Now</button>
+            <button id="pwa-install-btn" class="primary-btn" style="flex:1; margin:0; min-height:44px;">Install App</button>
+        </div>
+    </div>
+
+    <!-- About / Credits Modal -->
+    <div id="about-modal" class="modal-overlay" style="display:none; z-index:20000;">
+        <div class="modal-content dynamic-modal-inner" style="max-width:460px; text-align:center;">
+            <div style="margin-bottom:18px;">
+                <div style="width:56px; height:56px; background:linear-gradient(135deg,#366A4F,#1c5629); border-radius:50%; display:flex; align-items:center; justify-content:center; margin:0 auto 12px; font-size:1.6rem;">ℹ️</div>
+                <h2 style="color:#1c5629; margin:0 0 4px; font-family:'Instrument Serif',serif; font-size:1.2rem;">AC's Supervisory Matrix</h2>
+                <p style="margin:0; font-size:0.75rem; color:#475569; letter-spacing:1.5px; text-transform:uppercase;">About this Application</p>
+            </div>
+            <p style="font-size:0.8rem; color:#475569; margin-bottom:20px; line-height:1.6;">This platform was conceived, designed, and brought to life through the collaborative vision and hard work of:</p>
+            <div style="display:flex; flex-direction:column; gap:12px; margin-bottom:24px;">
+                <div style="background:#f0fdf4; border:1px solid #bbf7d0; border-radius:10px; padding:clamp(6px, 1.5vh, 12px) clamp(8px, 2vw, 16px);">
+                    <p style="margin:0 0 2px; font-weight:700; color:#15803d; font-family:'Instrument Serif',serif; font-size:1rem;">Dr. Saira Khan, PMS</p>
+                    <p style="margin:0; font-size:0.78rem; color:#4b5563;">Assistant Commissioner, Liaquatabad, Karachi</p>
+                </div>
+                <div style="background:#f0fdf4; border:1px solid #bbf7d0; border-radius:10px; padding:clamp(6px, 1.5vh, 12px) clamp(8px, 2vw, 16px);">
+                    <p style="margin:0 0 2px; font-weight:700; color:#15803d; font-family:'Instrument Serif',serif; font-size:1rem;">Mr. Hataf Siyal, PMS</p>
+                    <p style="margin:0; font-size:0.78rem; color:#4b5563;">Assistant Commissioner, Qasimabad, Hyderabad</p>
+                </div>
+                <div style="background:#f0fdf4; border:1px solid #bbf7d0; border-radius:10px; padding:clamp(6px, 1.5vh, 12px) clamp(8px, 2vw, 16px);">
+                    <p style="margin:0 0 2px; font-weight:700; color:#15803d; font-family:'Instrument Serif',serif; font-size:1rem;">Mr. Sheraz Ahmed</p>
+                    <p style="margin:0; font-size:0.78rem; color:#4b5563;">Mukhtiarkar U.T, Qasimabad, Hyderabad</p>
+                </div>
+            </div>
+            <p style="font-size:0.72rem; color:#94a3b8; margin-bottom:16px;">AC's Supervisory Matrix &mdash; Qasimabad &copy; 2026</p>
+            <button onclick="document.getElementById('about-modal').style.display='none'" class="secondary-btn" style="width:100%;">Close</button>
+        </div>
+    </div>
+
+    <!-- Global Image Viewer Modal -->
+    <div id="image-viewer-modal" style="display:none; position:fixed; top:0; left:0; width:100vw; height:100vh; background:rgba(0,0,0,0.9); z-index:11000; align-items:center; justify-content:center; flex-direction:column; overflow:hidden;">
+        <div style="position:absolute; top:20px; right:20px; display:flex; gap:15px; z-index:11001;">
+            <a id="iv-download" href="#" download="evidence_image.jpg" class="primary-btn" style="background:#1c5629; text-decoration:none;">⬇️ Download</a>
+            <button onclick="document.getElementById('image-viewer-modal').style.display='none'" class="primary-btn btn-cancel" style="background:rgba(255,255,255,0.2); border:none; color:white;">✖ Close</button>
+        </div>
+        <div id="iv-container" style="position:relative; width:90%; height:80%; display:flex; align-items:center; justify-content:center; overflow:auto;">
+            <img id="iv-image" src="" style="max-width:100%; max-height:100%; object-fit:contain; transition:transform 0.3s ease; transform-origin:center center; cursor:zoom-in;">
+        </div>
+        <div style="position:absolute; bottom:30px; display:flex; gap:15px; z-index:11001;">
+            <button id="iv-zoom-out" class="primary-btn" style="background:rgba(255,255,255,0.2); border:none; color:white; font-size:1.2rem; width:50px; border-radius:50%;">-</button>
+            <button id="iv-zoom-reset" class="primary-btn" style="background:rgba(255,255,255,0.2); border:none; color:white;">Reset</button>
+            <button id="iv-zoom-in" class="primary-btn" style="background:rgba(255,255,255,0.2); border:none; color:white; font-size:1.2rem; width:50px; border-radius:50%;">+</button>
+        </div>
+    </div>
+
+
+<!-- Global Image Viewer -->
+<div id="global-image-viewer" class="modal-overlay" style="display:none; z-index:99999; background:rgba(0,0,0,0.95);">
+  <div class="modal-content" style="background:transparent; box-shadow:none; text-align:center; padding:0; display:flex; flex-direction:column; align-items:center; justify-content:center; height:100%; max-width:100%; border:none;">
+    <div style="position:absolute; top:20px; right:20px; z-index:100000;">
+      <button onclick="window.downloadViewerImage()" style="background:#059669; color:white; border:none; padding:10px 15px; font-size:1.2rem; border-radius:8px; cursor:pointer; margin-right:10px;">📥 Download</button>
+      <button onclick="document.getElementById('global-image-viewer').style.display='none'" style="background:#ef4444; color:white; border:none; padding:10px 15px; font-size:1.2rem; border-radius:8px; cursor:pointer;">✖ Close</button>
+    </div>
+    <div style="position:absolute; bottom:20px; z-index:100000; display:flex; gap:10px;">
+      <button onclick="window.zoomViewerImage(0.2)" style="background:white; color:black; border:none; padding:10px 20px; font-size:1.5rem; border-radius:50%; cursor:pointer;">➕</button>
+      <button onclick="window.zoomViewerImage(-0.2)" style="background:white; color:black; border:none; padding:10px 20px; font-size:1.5rem; border-radius:50%; cursor:pointer;">➖</button>
+      <button onclick="window.resetViewerZoom()" style="background:white; color:black; border:none; padding:10px 20px; font-size:1rem; border-radius:20px; cursor:pointer;">Reset</button>
+    </div>
+    <img id="global-viewer-img" src="" style="max-width:90%; max-height:90%; object-fit:contain; transition: transform 0.2s; transform: scale(1);" />
+  </div>
+</div>
+
+
+    <!-- Domain 7: Anti-Encroachment Details Modal -->
+    <div id="ae-log-details-modal" class="modal-overlay">
+        <div class="modal-content">
+            <h2 style="color:#dc2626;">Anti-Encroachment Operation Details</h2>
+            <div id="ae-details-content" style="margin-bottom: 15px; font-size:0.9rem;"></div>
+            <div class="btn-group">
+                <button onclick="document.getElementById('ae-log-details-modal').style.display='none'" class="primary-btn btn-cancel">Close</button>
+            </div>
+        </div>
+    </div>
+
+</body>
+</html>
+
+
+

@@ -1,0 +1,21 @@
+{
+  "name": "Qasimabad Dashboard",
+  "short_name": "Qasimabad",
+  "description": "Untaxed Cigarettes Seizure Dashboard for Qasimabad",
+  "start_url": "./index.html",
+  "display": "standalone",
+  "background_color": "#064e3b",
+  "theme_color": "#064e3b",
+  "icons": [
+    {
+      "src": "sindh_monogram.webp",
+      "sizes": "192x192",
+      "type": "image/webp"
+    },
+    {
+      "src": "sindh_monogram.webp",
+      "sizes": "512x512",
+      "type": "image/webp"
+    }
+  ]
+}
